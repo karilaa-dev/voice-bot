@@ -49,6 +49,58 @@ https://voicemaster.xyz/
 
 	`pip3 install -r requirements.txt`
 
-4.Open **voicecreate.py** in a text editor and replace **'Enter Discord Token here'** with your bots token
+4.Set the following environment variables:
+	- `DISCORD_TOKEN`: Your bot's token.
+	- `COMMAND_PREFIX`: The command prefix (default is `.`).
+	- `ADMIN_ID`: The ID of the bot admin (default is the original author's ID).
 
-5.Run the bot
+5.Run the bot:
+	`python3 voicecreate.py`
+
+# Docker Support
+
+You can also run this bot using Docker. This is recommended for easier deployment and management.
+
+## Using Docker Compose (Recommended)
+
+1.  Clone the repository.
+2.  Create a `.env` file in the root directory with the following content:
+
+    ```env
+    DISCORD_TOKEN=your_discord_token_here
+    ADMIN_ID=your_admin_id_here
+    COMMAND_PREFIX=.
+    ```
+
+3.  Run the bot:
+
+    ```bash
+    docker-compose up -d
+    ```
+
+    The bot will start in the background. The database will be persisted in the `./data` directory.
+
+## Using Docker Run
+
+If you prefer not to use Docker Compose, you can run the container directly.
+
+1.  Build the image:
+
+    ```bash
+    docker build -t voicemaster .
+    ```
+
+2.  Run the container:
+
+    ```bash
+    docker run -d \
+      --name voice-bot \
+      -v $(pwd)/data:/app/data \
+      -e DISCORD_TOKEN=your_discord_token_here \
+      -e ADMIN_ID=your_admin_id_here \
+      -e COMMAND_PREFIX=. \
+      -e DB_PATH=/app/data/voice.db \
+      voicemaster
+    ```
+
+    Make sure to replace `your_discord_token_here` and `your_admin_id_here` with your actual values.

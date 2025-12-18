@@ -2,15 +2,28 @@ import discord
 import asyncio
 from discord.ext import commands
 import sqlite3
-
+import os
+import shutil
 
 class voice(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.db_path = os.getenv('DB_PATH', 'voice.db')
+        self.admin_id = int(os.getenv('ADMIN_ID', 151028268856770560))
+        self._setup_db()
+
+    def _setup_db(self):
+        # If the database file doesn't exist at the configured path,
+        # and we have a template in the current directory, copy it over.
+        if not os.path.exists(self.db_path) and os.path.exists('voice.db') and os.path.abspath(self.db_path) != os.path.abspath('voice.db'):
+             # Create directory if it doesn't exist
+            os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
+            shutil.copy2('voice.db', self.db_path)
+            print(f"Initialized database at {self.db_path} from template.")
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
-        conn = sqlite3.connect('voice.db')
+        conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
         guildID = member.guild.id
         c.execute("SELECT voiceChannelID FROM guild WHERE guildID = ?", (guildID,))
@@ -92,11 +105,11 @@ class voice(commands.Cog):
 
     @voice.command()
     async def setup(self, ctx):
-        conn = sqlite3.connect('voice.db')
+        conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
         guildID = ctx.guild.id
         id = ctx.author.id
-        if ctx.author.id == ctx.guild.owner_id or ctx.author.id == 151028268856770560:
+        if ctx.author.id == ctx.guild.owner_id or ctx.author.id == self.admin_id:
             def check(m):
                 return m.author.id == ctx.author.id
             await ctx.channel.send("**You have 60 seconds to answer each question!**")
@@ -131,9 +144,9 @@ class voice(commands.Cog):
 
     @commands.command()
     async def setlimit(self, ctx, num):
-        conn = sqlite3.connect('voice.db')
+        conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
-        if ctx.author.id == ctx.guild.owner.id or ctx.author.id == 151028268856770560:
+        if ctx.author.id == ctx.guild.owner.id or ctx.author.id == self.admin_id:
             c.execute("SELECT * FROM guildSettings WHERE guildID = ?", (ctx.guild.id,))
             voice=c.fetchone()
             if voice is None:
@@ -152,7 +165,7 @@ class voice(commands.Cog):
 
     @voice.command()
     async def lock(self, ctx):
-        conn = sqlite3.connect('voice.db')
+        conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
         id = ctx.author.id
         c.execute("SELECT voiceID FROM voiceChannel WHERE userID = ?", (id,))
@@ -170,7 +183,7 @@ class voice(commands.Cog):
 
     @voice.command()
     async def unlock(self, ctx):
-        conn = sqlite3.connect('voice.db')
+        conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
         id = ctx.author.id
         c.execute("SELECT voiceID FROM voiceChannel WHERE userID = ?", (id,))
@@ -188,7 +201,7 @@ class voice(commands.Cog):
 
     @voice.command(aliases=["allow"])
     async def permit(self, ctx, member : discord.Member):
-        conn = sqlite3.connect('voice.db')
+        conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
         id = ctx.author.id
         c.execute("SELECT voiceID FROM voiceChannel WHERE userID = ?", (id,))
@@ -205,7 +218,7 @@ class voice(commands.Cog):
 
     @voice.command(aliases=["deny"])
     async def reject(self, ctx, member : discord.Member):
-        conn = sqlite3.connect('voice.db')
+        conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
         id = ctx.author.id
         guildID = ctx.guild.id
@@ -231,7 +244,7 @@ class voice(commands.Cog):
 
     @voice.command()
     async def limit(self, ctx, limit):
-        conn = sqlite3.connect('voice.db')
+        conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
         id = ctx.author.id
         c.execute("SELECT voiceID FROM voiceChannel WHERE userID = ?", (id,))
@@ -255,7 +268,7 @@ class voice(commands.Cog):
 
     @voice.command()
     async def name(self, ctx,*, name):
-        conn = sqlite3.connect('voice.db')
+        conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
         id = ctx.author.id
         c.execute("SELECT voiceID FROM voiceChannel WHERE userID = ?", (id,))
@@ -279,7 +292,7 @@ class voice(commands.Cog):
     @voice.command()
     async def claim(self, ctx):
         x = False
-        conn = sqlite3.connect('voice.db')
+        conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
         channel = ctx.author.voice.channel
         if channel == None:

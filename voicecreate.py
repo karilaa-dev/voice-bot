@@ -2,16 +2,19 @@ import discord
 from discord.ext import commands
 import traceback
 import sys
+import os
 
 intents = discord.Intents.default()
 #Message content intent needs to be enabled in the developer portal for your chosen bot.
 intents.message_content = True
 
-bot = commands.Bot(command_prefix=".", intents=intents)
+bot = commands.Bot(command_prefix=os.getenv('COMMAND_PREFIX', '.'), intents=intents)
 
 bot.remove_command("help")
 
-DISCORD_TOKEN = 'Enter Discord Token here'
+DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
+if not DISCORD_TOKEN:
+    raise ValueError("No DISCORD_TOKEN found in environment variables.")
 
 initial_extensions = ['cogs.voice']
 
@@ -21,7 +24,7 @@ async def on_ready():
     print(bot.user.name)
     print(bot.user.id)
     print('------')
-    
+
     for extension in initial_extensions:
         try:
             await bot.load_extension(extension)
