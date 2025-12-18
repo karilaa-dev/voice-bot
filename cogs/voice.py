@@ -5,7 +5,7 @@ import sqlite3
 import os
 
 DB_PATH = os.getenv("DB_PATH", "voice.db")
-ADMIN_ID = int(os.getenv("ADMIN_ID", 151028268856770560))
+ADMIN_ID = int(os.getenv("ADMIN_ID", 0))
 
 
 class voice(commands.Cog):
