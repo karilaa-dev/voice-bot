@@ -3,6 +3,7 @@ version: '3.8'
 services:
   voicemaster:
     build: .
+    mage: ghcr.io/karilaa-dev/VoiceMaster-Discord-Bot:latest
     volumes:
       - ./data:/app/data
     environment:
