@@ -4,12 +4,19 @@ from discord.ext import commands
 from discord import app_commands
 import sqlite3
 import os
+import logging
 
 DB_PATH = os.getenv("DB_PATH", "voice.db")
 ADMIN_ID = int(os.getenv("ADMIN_ID", 0))
 
+logger = logging.getLogger("cogs.voice")
+
 
 class voice(commands.Cog):
+    """
+    Cog for managing dynamic voice channels.
+    """
+
     def __init__(self, bot):
         self.bot = bot
 
@@ -17,19 +24,30 @@ class voice(commands.Cog):
         name="voice", description="Voice channel management"
     )
 
-    async def cog_app_command_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
+    async def cog_app_command_error(
+        self, interaction: discord.Interaction, error: app_commands.AppCommandError
+    ):
         if isinstance(error, app_commands.MissingPermissions):
-            await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
+            await interaction.response.send_message(
+                "You don't have permission to use this command.", ephemeral=True
+            )
         elif isinstance(error, app_commands.CheckFailure):
-            await interaction.response.send_message("You can't use this command.", ephemeral=True)
+            await interaction.response.send_message(
+                "You can't use this command.", ephemeral=True
+            )
         else:
-            # Only send if not already sent (though response.is_done is not available on interaction directly in all versions, checking usually good)
+            # Only send if not already sent
             if not interaction.response.is_done():
-                await interaction.response.send_message(f"An error occurred: {error}", ephemeral=True)
-            print(f"App command error: {error}")
+                await interaction.response.send_message(
+                    f"An error occurred: {error}", ephemeral=True
+                )
+            logger.error(f"App command error: {error}", exc_info=True)
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
+        """
+        Listener for voice state updates to handle dynamic channel creation and cleanup.
+        """
         conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
         guildID = member.guild.id
@@ -103,9 +121,9 @@ class voice(commands.Cog):
                         await channel2.delete()
                         await asyncio.sleep(3)
                         c.execute("DELETE FROM voiceChannel WHERE userID=?", (id,))
-            except Exception as e:
-                # Ideally log error
-                print(f"Error in voice state update: {e}")
+            except Exception:
+                # Log error with stack trace
+                logger.exception("Error in voice state update")
                 pass
         conn.commit()
         conn.close()
