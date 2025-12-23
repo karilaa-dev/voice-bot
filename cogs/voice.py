@@ -25,13 +25,6 @@ class voice(commands.Cog):
             voiceID = voice[0]
             try:
                 if after.channel.id == voiceID:
-                    c.execute("SELECT * FROM voiceChannel WHERE userID = ?", (member.id,))
-                    cooldown=c.fetchone()
-                    if cooldown is None:
-                        pass
-                    else:
-                        await member.send("Creating channels too quickly you've been put on a 15 second cooldown!")
-                        await asyncio.sleep(15)
                     c.execute("SELECT voiceCategoryID FROM guild WHERE guildID = ?", (guildID,))
                     voice=c.fetchone()
                     c.execute("SELECT channelName, channelLimit FROM userSettings WHERE userID = ?", (member.id,))
