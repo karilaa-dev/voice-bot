@@ -61,7 +61,7 @@ class voice(commands.Cog):
                     channelID = channel2.id
                     await member.move_to(channel2)
                     await channel2.set_permissions(self.bot.user, connect=True,read_messages=True)
-                    await channel2.set_permissions(member, connect=True,read_messages=True)
+                    await channel2.set_permissions(member, connect=True, read_messages=True, manage_channels=True)
                     await channel2.edit(name= name, user_limit = limit)
                     c.execute("INSERT INTO voiceChannel VALUES (?, ?)", (id,channelID))
                     conn.commit()
@@ -303,6 +303,10 @@ class voice(commands.Cog):
                 if x == False:
                     await ctx.channel.send(f"{ctx.author.mention} You are now the owner of the channel!")
                     c.execute("UPDATE voiceChannel SET userID = ? WHERE voiceID = ?", (id, channel.id))
+                    old_owner = ctx.guild.get_member(voice[0])
+                    if old_owner:
+                        await channel.set_permissions(old_owner, connect=True, read_messages=True, manage_channels=False)
+                    await channel.set_permissions(ctx.author, connect=True, read_messages=True, manage_channels=True)
             conn.commit()
             conn.close()
 
