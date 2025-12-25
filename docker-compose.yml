@@ -3,11 +3,10 @@ version: '3.8'
 services:
   voicemaster:
     build: .
-    mage: ghcr.io/karilaa-dev/voice-bot:latest
+    image: ghcr.io/karilaa-dev/voice-bot:latest
     volumes:
       - ./data:/app/data
     environment:
       - DISCORD_TOKEN=${DISCORD_TOKEN}
       - ADMIN_ID=${ADMIN_ID}
-      - COMMAND_PREFIX=${COMMAND_PREFIX:-.}
       - DB_PATH=/app/data/voice.db
